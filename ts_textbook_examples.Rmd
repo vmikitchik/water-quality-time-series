@@ -1,11 +1,17 @@
 ---
-title: "R Notebook"
-output: html_notebook
+title: "ts_textbook_examples"
+author: "Val M"
+date: "2024-06-09"
+output: html_document
 ---
 
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
 
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
 
 ```{r}
 # example code from textbook
@@ -790,4 +796,3 @@ library(dplyr)
 ```{r}
 renv::init()
 ```
-

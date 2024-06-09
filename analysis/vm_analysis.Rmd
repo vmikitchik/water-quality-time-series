@@ -1,0 +1,516 @@
+
+https://rconnect.usgs.gov/NMC_dataRetrieval_1/dataRetrieval_1.html#/installation
+https://usepa.github.io/TADA/articles/TADAModule1.html
+https://github.com/USEPA/TADA
+https://www.epa.gov/waterdata/TADA
+https://rconnect.usgs.gov/dataRetrieval/
+https://rconnect.usgs.gov/dataRetrieval/reference/readWQPqw.html
+
+selected examples from https://rconnect.usgs.gov/NMC_dataRetrieval_2/dataRetrieval_2.html#/troubleshooting-timeout
+and https://rconnect.usgs.gov/NMC_dataRetrieval_1/dataRetrieval_1.html#/title-slide
+
+```{r}
+install.packages("dataRetrieval")
+
+```
+
+```{r}
+library(remotes)
+remotes::install_github("DOI-USGS/dataRetrieval",
+               build_vignettes = TRUE)
+```
+
+```{r}
+library(dataRetrieval)
+```
+
+
+```{r}
+phos <- readWQPqw(siteNumbers = "USGS-01631000", parameterCd = "00660")
+
+library(ggplot2)
+ggplot(data = phos) +
+  geom_point(aes(x = Activity_StartDateTime,
+                 y = Result_Measure))
+```
+
+```{r}
+
+theme_dataRetrial_talk <- function(base_family = "serif",
+                                   size = 25,
+                                   ...){
+  theme_bw(base_family = base_family, ...) +
+  theme(
+    plot.title = element_text(size = size),
+    text = element_text(size = size),
+    axis.text = element_text(size = size),
+    plot.margin = unit(c(0.5,0.5,0.5,1), "cm"),
+    legend.background = element_rect(color = "black", 
+                                     fill = "transparent")
+  )
+}
+
+dataRetrieval_timeseries_framework <- function(font_size = 25, point_size = 4){
+  update_geom_defaults("point",
+                   list(size = point_size,
+                        fill = "darkgrey",
+                        color = "darkgrey"))
+  
+  update_geom_defaults("line",
+                 list(linewidth = 1))
+
+  list_out <- list(theme_dataRetrial_talk(size = font_size))
+  return(c(list_out))
+}
+
+unescape_html <- function(str){
+  fancy_chars <- regmatches(str, gregexpr("&#\\d{3};",str))
+
+  unescaped <- xml2::xml_text(xml2::read_html(paste0("<x>", fancy_chars, "</x>")))
+
+  fancy_chars <- gsub(pattern = "&#\\d{3};",
+                      replacement = unescaped, x = str)
+
+  fancy_chars <- gsub("Â","", fancy_chars)
+  return(fancy_chars)
+}
+```
+
+```{r}
+ggplot(data = phos) +
+  dataRetrieval_timeseries_framework() +
+  geom_point(aes(x = Activity_StartDateTime,
+                 y = Result_Measure)) +
+  xlab("Year")
+```
+
+```{r}
+site_info <- attr(phos, "Location_Identifier")
+param_info <- attr(phos, "variableInfo")
+query_date <- attr(phos, "queryTime")
+query_date <- format(query_date, "%B %d, %Y")
+
+ylabel <- paste0(param_info$characteristicName[1],
+              " [", param_info$param_units[1],
+              "]")
+
+ggplot(data = phos) +
+  dataRetrieval_timeseries_framework() +
+  geom_point(aes(
+    x = Activity_StartDateTime,
+    y = Result_Measure)) +
+  xlab("Year") +
+  labs(title = site_info$Location_Name,
+       caption = paste("Data pulled on:", query_date)) +
+  ylab(ylabel)
+```
+
+```{r}
+if (!require("DT")) install.packages('DT')
+interesting_columns <- c("Activity_StartDateTime",
+     "Result_Measure",
+     "Result_MeasureUnit")
+phos_trimmed <- phos[, interesting_columns]
+
+names(phos_trimmed) <- c("Date",
+                         "Value",
+                         "Units")
+
+DT::datatable(phos_trimmed, rownames = FALSE)
+```
+
+```{r}
+orthophosphate <- readWQPqw("USGS-01631000",
+                            "Orthophosphate")
+nrow(orthophosphate)
+nrow(phos)
+```
+
+
+
+```{r}
+wi_phos <- readWQPsummary(statecode = "WI",
+                          sampleMedia = "Water",
+                          characteristicName = "Phosphorus")
+
+names(wi_phos)
+```
+
+```{r}
+library("dplyr")
+wi_phos_summary <- wi_phos |> 
+  rename(Site = MonitoringLocationIdentifier) |>
+  mutate(Lat = as.numeric(MonitoringLocationLatitude),
+         Lon = as.numeric(MonitoringLocationLongitude)) |> 
+  group_by(Site, Lat, Lon) |> 
+  summarise(min_year = min(YearSummarized),
+            max_year = max(YearSummarized),
+            count = sum(ResultCount)) |> 
+  mutate(POR = max_year - min_year) |> 
+  filter(count > 100,
+         POR >= 20) |> 
+  arrange(desc(count)) |> 
+  ungroup()
+```
+
+```{r}
+# leflet requires terra, which is difficult to install
+# follow instructions here: https://github.com/rspatial/terra
+# remotes::install_github("rspatial/terra")
+library(leaflet)
+
+leaf_map <- leaflet(data = wi_phos_summary, 
+                    width = 500, height = 500) |> 
+    addProviderTiles("CartoDB.Positron") |> 
+    addCircleMarkers(lng = ~Lon,
+        lat = ~Lat,
+        fillColor = "red",
+        fillOpacity = 0.8,
+        stroke = FALSE,
+        radius = 6,
+        popup = ~Site) |> 
+    setView(lng = mean(range(wi_phos_summary$Lon)),
+            lat = mean(range(wi_phos_summary$Lat)),
+            zoom = 6)
+
+leaf_map
+```
+
+```{r}
+unique(wi_phos$MonitoringLocationTypeName)
+
+```
+
+```{r}
+wi_phos_summary <- wi_phos |> 
+  filter(MonitoringLocationTypeName %in% 
+           c("Stream",
+             "Spring",
+             "River/Stream")) |> 
+  mutate(Lat = as.numeric(MonitoringLocationLatitude),
+         Lon = as.numeric(MonitoringLocationLongitude)) |> 
+  group_by(MonitoringLocationIdentifier,
+           Lat,
+           Lon) |> 
+  summarise(min_year = min(YearSummarized),
+            max_year = max(YearSummarized),
+            count = sum(ResultCount)) |> 
+  mutate(POR = max_year - min_year) |> 
+  filter(count > 100,
+         POR >= 20) |> 
+  ungroup()
+```
+
+```{r}
+leaf_map <- leaflet(data = wi_phos_summary, 
+                    width = 500, height = 500) |> 
+    addProviderTiles("CartoDB.Positron") |> 
+    addCircleMarkers(lng = ~Lon,
+            lat = ~Lat,
+            fillColor = "red",
+            fillOpacity = 0.8,
+            stroke = FALSE,
+            radius = 6,
+            popup = ~MonitoringLocationIdentifier) |> 
+    setView(lng = mean(range(wi_phos_summary$Lon)),
+            lat = mean(range(wi_phos_summary$Lat)),
+            zoom = 6)
+
+leaf_map
+```
+
+```{r}
+phos_data <- readWQPdata(siteid = wi_phos_summary$MonitoringLocationIdentifier,
+                         characteristicName = "Phosphorus",
+                         sampleMedia = "Water")
+```
+
+
+```{r}
+df <- phos_data |> 
+  select(Fraction = Result_SampleFraction,
+         Units = Result_MeasureUnit) |> 
+  distinct() |> 
+  arrange(Fraction)
+```
+
+```{r}
+non_numerics <- phos_data |> 
+  filter(!is.na(Result_Measure),
+         is.na(as.numeric(Result_Measure))) |> 
+  select(Result = Result_Measure) |> 
+  distinct() |> 
+  pull()
+```
+```{r}
+uv <- readNWISuv(siteNumbers = "05114000",
+                 parameterCd = "00060",
+                 startDate = "2021-01-01",
+                 endDate = "2021-12-31")
+
+ggplot(data = uv) +
+  dataRetrieval_timeseries_framework() +
+  geom_line(aes(
+    x = dateTime,
+    y = X_00060_00000)) +
+  xlab("Date") +
+  labs(title = attr(uv, "siteInfo")$station_nm,
+       caption = paste("Data pulled on:", 
+                       as.Date(attr(uv, "queryTime")))) +
+  ylab(unescape_html(attr(uv, "variableInfo")$variableName))
+```
+```{r}
+dv <- readNWISdv(siteNumbers = "04085427",
+                 parameterCd = "00060",
+                 startDate = "2011-01-01",
+                 endDate = "2021-12-31")
+
+ggplot(data = dv) +
+  dataRetrieval_timeseries_framework() +
+  geom_line(aes(
+    x = Date,
+    y = X_00060_00003)) +
+  xlab("Date") +
+  labs(title = attr(dv, "siteInfo")$station_nm,
+       caption = paste("Data pulled on:", 
+                       as.Date(attr(dv, "queryTime")))) +
+  ylab(unescape_html(attr(dv, "variableInfo")$variableName))
+```
+
+```{r}
+what_data <- whatNWISdata(huc = "02070010",
+                          siteType = "ST")
+
+trimmed <- what_data |> 
+  select(site_no, 
+         data_type_cd, 
+         parm_cd,
+         stat_cd,
+         Start = begin_date,
+         End = end_date,
+         Count = count_nu)
+```
+
+```{r}
+what_data_site <- whatNWISdata(siteNumber = "05427948")
+
+what_params <- readNWISpCode(unique(what_data_site$parm_cd))
+
+data_overview <- what_data_site |> 
+  select(data_type_cd, parm_cd, stat_cd,
+         Count = count_nu) |> 
+  left_join(what_params |> 
+              select(parm_cd = parameter_cd,
+                     parameter_nm),
+            by = "parm_cd") |> 
+  arrange(desc(Count))
+```
+
+```{r}
+attributes(phos_data)
+```
+
+
+
+```{r}
+site <- "05427948"
+phos_site <- readWQPqw(paste0("USGS-", site),
+                       "00665")
+
+discharge_site <- readNWISdv(site, "00060")
+
+phos_data <- phos_site |>
+  rename(Date = Activity_StartDate,
+         Concentration = Result_Measure) |> 
+  left_join(discharge_site |> 
+              select(Date, Discharge = X_00060_00003),
+            by = "Date")
+
+param_info <- attr(phos_data, "variableInfo")[1, ]
+ylabel <- paste0(param_info$characteristicName, " [",
+                 param_info$param_units, "]")
+
+ggplot(data = phos_data) +
+  dataRetrieval_timeseries_framework() +
+  geom_point(aes(x = Discharge,
+                 y = Concentration)) +
+  ggtitle(attr(phos_data, "siteInfo")$station_nm) +
+  xlab(unescape_html(attr(discharge_site,
+                          "variableInfo")$variableName)) +
+  ylab(ylabel) + 
+  scale_x_log10() +
+  scale_y_log10()
+```
+
+```{r}
+library(dataRetrieval)
+wi_wq_data <- readWQPsummary(statecode = "WI",
+                             sampleMedia = "Water",
+                             characteristicType = "Nutrient",
+                             siteType = "Stream",
+                             providers = "NWIS")
+```
+
+```{r}
+wi_summary <- wi_wq_data |> 
+  rename(site = MonitoringLocationIdentifier,
+         param = CharacteristicName) |> 
+  group_by(site, param) |> 
+  summarise(min_year = min(YearSummarized),
+            max_year = max(YearSummarized),
+            count = sum(ResultCount)) |> 
+  mutate(POR = max_year - min_year) |> 
+  filter(count > 200,
+         POR >= 15) |> 
+  arrange(desc(count)) |> 
+  ungroup()
+
+DT::datatable(wi_summary,
+            rownames = FALSE,
+            options = list(dom = 'tp',
+                           pageLength = 6
+)) |> 
+DT::formatStyle(columns = 1:6, fontSize = '55%')
+```
+
+```{r}
+length(unique(wi_summary$site))
+wi_summary <- wi_summary |> 
+  filter(max_year >= 2016)
+
+length(unique(wi_summary$site))
+```
+
+```{r}
+usgs_sites <- gsub("USGS-", "", unique(wi_summary$site))
+
+wi_discharge <- whatNWISdata(siteNumber = usgs_sites,
+                             service = "dv",
+                             parameterCd = "00060",
+                             statCd = "00003")
+
+wi_discharge_filtered <- wi_discharge |> 
+  mutate(POR = as.numeric(end_date - begin_date) / 365.25) |> 
+  filter(POR > 15,
+         end_date >= as.Date("2015-10-01"))
+```
+
+
+```{r}
+site_to_check <- "04027000"
+
+our_site <- wi_summary |> 
+  filter(site == paste0("USGS-", site_to_check)) |> 
+  select(-site, -max_year)
+```
+
+```{r}
+site_available <- whatNWISdata(siteNumber = site_to_check)
+
+pcodes <- unique(site_available$parm_cd)
+pcode_info <- readNWISpCode(pcodes)
+
+all_data <- site_available |> 
+  select(data_type_cd, parameter_cd = parm_cd, 
+         stat_cd, begin_date, end_date, count_nu) |> 
+  left_join(pcode_info, by = "parameter_cd") 
+```
+
+```{r}
+site <- "04027000"
+param <- "00665"
+
+qw_data <- readWQPqw(siteNumbers = paste0("USGS-", site), parameterCd = param)
+discharge <- readNWISdv(site, parameterCd = "00060",
+                        statCd = "00003",
+                        startDate = min(qw_data$Activity_StartDate),
+                        endDate = max(qw_data$Activity_StartDate))
+
+combine_data <- qw_data |> 
+  select(Date = Activity_StartDate,
+         phos_value = Result_Measure) |> 
+  left_join(discharge |> 
+              select(Date, Flow = X_00060_00003),
+            by = "Date")
+```
+
+
+```{r}
+site_info <- attr(discharge, "siteInfo")
+param_info <- attr(qw_data, "variableInfo")
+ylabel <- paste0("Phosphorus [mg/l as P]")
+
+library(ggplot2)
+simple_timeseries <- ggplot(data = combine_data) +
+  dataRetrieval_timeseries_framework() +
+  geom_point(aes(x = Flow,
+                 y = phos_value)) +
+  ggtitle(site_info$station_nm) +
+  ylab(ylabel) +
+  scale_y_log10() +
+  scale_x_log10()
+
+simple_timeseries
+```
+
+```{r}
+param_info <- attr(qw_data, "variableInfo")
+param_info
+```
+
+
+```{r}
+# create function to search different states and union data together
+get_data <- function(x){
+  readWQPsummary(statecode = x,
+                 sampleMedia = "Water",
+                 characteristicName = "Phosphorus",
+                 siteType = "Stream",
+                 providers = "NWIS") |> 
+    mutate(state = x)
+}
+
+filter_data <- function(x){
+  x |> 
+    rename(site = MonitoringLocationIdentifier) |> 
+    mutate(Lat = as.numeric(MonitoringLocationLatitude),
+           Lon = as.numeric(MonitoringLocationLongitude)) |> 
+    group_by(site, Lat, Lon, state) |> 
+    summarise(min_year = min(YearSummarized),
+              max_year = max(YearSummarized),
+              count = sum(ResultCount)) |> 
+    mutate(POR = max_year - min_year) |> 
+    filter(count > 200,
+           POR >= 15) |> 
+    ungroup() |> 
+    filter(max_year >= 2016)
+}
+
+
+all_data <- data.frame()
+
+for(state in c("WI", "MI", "IL", "IN",
+               "MN", "OH", "NY", "PA")){
+ 
+  wq_data <- get_data(state)
+  filtered_data <- filter_data(wq_data)
+  
+  all_data <- bind_rows(all_data, filtered_data)
+   
+}
+```
+
+```{r}
+leaf_map <- leaflet(data = all_data,
+                    width = 500, height = 500) |> 
+    addProviderTiles("CartoDB.Positron") |> 
+    addCircleMarkers(lng = ~Lon, 
+        lat = ~Lat,
+        fillColor = "red",
+        fillOpacity = 0.8,
+        stroke = FALSE,
+        radius = 6)
+
+leaf_map
+```
+

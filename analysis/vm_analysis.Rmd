@@ -10,7 +10,7 @@ selected examples from https://rconnect.usgs.gov/NMC_dataRetrieval_2/dataRetriev
 and https://rconnect.usgs.gov/NMC_dataRetrieval_1/dataRetrieval_1.html#/title-slide
 
 ```{r}
-install.packages("dataRetrieval")
+# install.packages("dataRetrieval")
 
 ```
 
@@ -106,7 +106,7 @@ ggplot(data = phos) +
 ```
 
 ```{r}
-if (!require("DT")) install.packages('DT')
+# if (!require("DT")) install.packages('DT')
 interesting_columns <- c("Activity_StartDateTime",
      "Result_Measure",
      "Result_MeasureUnit")
@@ -242,6 +242,8 @@ non_numerics <- phos_data |>
   distinct() |> 
   pull()
 ```
+
+
 ```{r}
 uv <- readNWISuv(siteNumbers = "05114000",
                  parameterCd = "00060",
@@ -259,6 +261,8 @@ ggplot(data = uv) +
                        as.Date(attr(uv, "queryTime")))) +
   ylab(unescape_html(attr(uv, "variableInfo")$variableName))
 ```
+
+
 ```{r}
 dv <- readNWISdv(siteNumbers = "04085427",
                  parameterCd = "00060",
@@ -277,6 +281,7 @@ ggplot(data = dv) +
   ylab(unescape_html(attr(dv, "variableInfo")$variableName))
 ```
 
+
 ```{r}
 what_data <- whatNWISdata(huc = "02070010",
                           siteType = "ST")
@@ -290,6 +295,7 @@ trimmed <- what_data |>
          End = end_date,
          Count = count_nu)
 ```
+
 
 ```{r}
 what_data_site <- whatNWISdata(siteNumber = "05427948")
@@ -305,6 +311,7 @@ data_overview <- what_data_site |>
             by = "parm_cd") |> 
   arrange(desc(Count))
 ```
+
 
 ```{r}
 attributes(phos_data)
@@ -342,6 +349,7 @@ ggplot(data = phos_data) +
   scale_y_log10()
 ```
 
+
 ```{r}
 library(dataRetrieval)
 wi_wq_data <- readWQPsummary(statecode = "WI",
@@ -350,6 +358,7 @@ wi_wq_data <- readWQPsummary(statecode = "WI",
                              siteType = "Stream",
                              providers = "NWIS")
 ```
+
 
 ```{r}
 wi_summary <- wi_wq_data |> 
@@ -373,6 +382,7 @@ DT::datatable(wi_summary,
 DT::formatStyle(columns = 1:6, fontSize = '55%')
 ```
 
+
 ```{r}
 length(unique(wi_summary$site))
 wi_summary <- wi_summary |> 
@@ -380,6 +390,7 @@ wi_summary <- wi_summary |>
 
 length(unique(wi_summary$site))
 ```
+
 
 ```{r}
 usgs_sites <- gsub("USGS-", "", unique(wi_summary$site))
@@ -404,6 +415,7 @@ our_site <- wi_summary |>
   select(-site, -max_year)
 ```
 
+
 ```{r}
 site_available <- whatNWISdata(siteNumber = site_to_check)
 
@@ -415,6 +427,7 @@ all_data <- site_available |>
          stat_cd, begin_date, end_date, count_nu) |> 
   left_join(pcode_info, by = "parameter_cd") 
 ```
+
 
 ```{r}
 site <- "04027000"
@@ -452,6 +465,7 @@ simple_timeseries <- ggplot(data = combine_data) +
 
 simple_timeseries
 ```
+
 
 ```{r}
 param_info <- attr(qw_data, "variableInfo")
@@ -499,6 +513,7 @@ for(state in c("WI", "MI", "IL", "IN",
    
 }
 ```
+
 
 ```{r}
 leaf_map <- leaflet(data = all_data,

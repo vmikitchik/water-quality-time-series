@@ -11,7 +11,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## R Markdown
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+Below are various code examples from Time Series: A Data Analysis Approach Using R
+Also referenced in the repo for the book at: https://github.com/nickpoison/tsda/blob/main/Rcode.md
 
 
 ```{r}
@@ -250,7 +251,7 @@ summary(aov(fit)) # ANOVA table (compare to next line)
 summary(aov(lm(cmort~cbind(trend, temp, temp2, part)))) # Table 3.1
 num = length(cmort) # sample size
 AIC(fit)/num - log(2*pi) # AIC
-BIC(fit)/num - log(2*pi) # BIC
+stats::BIC(fit)/num - log(2*pi) # BIC
 ```
 
 ```{r}

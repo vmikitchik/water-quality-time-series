@@ -10,14 +10,14 @@ selected examples from https://rconnect.usgs.gov/NMC_dataRetrieval_2/dataRetriev
 and https://rconnect.usgs.gov/NMC_dataRetrieval_1/dataRetrieval_1.html#/title-slide
 
 ```{r}
-install.packages("dataRetrieval")
+# install.packages("dataRetrieval")
 
 ```
 
 ```{r}
-library(remotes)
-remotes::install_github("DOI-USGS/dataRetrieval",
-               build_vignettes = TRUE)
+# library(remotes)
+# remotes::install_github("DOI-USGS/dataRetrieval",
+#                build_vignettes = TRUE)
 ```
 
 ```{r}

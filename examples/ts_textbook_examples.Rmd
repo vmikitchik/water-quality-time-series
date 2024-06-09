@@ -108,7 +108,7 @@ tsplot(v, ylim=c(-3,3), col=4, main="moving average")
 ```{r}
 set.seed(90210)
 w = rnorm(250 + 50) # 50 extra to avoid startup problems
-x = filter(w, filter=c(1.5,-.75), method="recursive")[-(1:50)]
+x = stats::filter(w, filter=c(1.5,-.75), method="recursive")[-(1:50)]
 tsplot(x, main="autoregression", col=4)
 ```
 
@@ -152,17 +152,17 @@ ccf(y, x, ylab="CCovF", type="covariance", panel.first=Grid())
 ```{r}
 (r = acf1(soi, 6, plot=FALSE)) # sample acf values
 par(mfrow=c(1,2), mar=c(2.5,2.5,0,0)+.5, mgp=c(1.6,.6,0))
-plot(lag(soi,-1), soi, col="dodgerblue3", panel.first=Grid())
+plot(stats::lag(soi,-1), soi, col="dodgerblue3", panel.first=Grid())
 legend("topleft", legend=r[1], bg="white", adj=.45, cex = 0.85)
-plot(lag(soi,-6), soi, col="dodgerblue3", panel.first=Grid())
+plot(stats::lag(soi,-6), soi, col="dodgerblue3", panel.first=Grid())
 legend("topleft", legend=r[6], bg="white", adj=.25, cex = 0.8)
 ```
 ```{r}
 set.seed(101011)
 x1 = sample(c(-2,2), 11, replace=TRUE) # simulated coin tosses
 x2 = sample(c(-2,2), 101, replace=TRUE)
-y1 = 5 + filter(x1, sides=1, filter=c(1,-.5))[-1]
-y2 = 5 + filter(x2, sides=1, filter=c(1,-.5))[-1]
+y1 = 5 + stats::filter(x1, sides=1, filter=c(1,-.5))[-1]
+y2 = 5 + stats::filter(x2, sides=1, filter=c(1,-.5))[-1]
 tsplot(y1, type="s", col=4, xaxt="n", yaxt="n") # y2 not shown
 axis(1, 1:10); axis(2, seq(2,8,2), las=1)
 
@@ -177,6 +177,7 @@ acf1(soi, 48, main="Southern Oscillation Index")
 acf1(rec, 48, main="Recruitment")
 ccf2(soi, rec, 48, main="SOI & Recruitment")
 ```
+
 ```{r}
 set.seed(1492)
 num = 120
@@ -189,6 +190,7 @@ tsplot(X, col=4); tsplot(Y, col=4)
 acf1(X, 48); acf1(Y, 48)
 ccf2(X, Y, 24); ccf2(X, Yw, 24, ylim=c(-.6,.6))
 ```
+
 ```{r}
 summary(fit <- lm(salmon~time(salmon), na.action=NULL))
 tsplot(salmon, col=4, ylab="USD per KG", main="Salmon Export Price")
@@ -255,7 +257,7 @@ stats::BIC(fit)/num - log(2*pi) # BIC
 ```
 
 ```{r}
-fish = ts.intersect( rec, soiL6=lag(soi,-6) )
+fish = ts.intersect( rec, soiL6=stats::lag(soi,-6) )
 summary(fit1 <- lm(rec~ soiL6, data=fish, na.action=NULL))
 ```
 
@@ -263,6 +265,7 @@ summary(fit1 <- lm(rec~ soiL6, data=fish, na.action=NULL))
 library(dynlm)
 summary(fit2 <- dynlm(rec~ L(soi,6)))
 ```
+
 ```{r}
 fit = lm(salmon~time(salmon), na.action=NULL) # the regression
 par(mfrow=c(2,1)) # plot transformed data
@@ -300,7 +303,7 @@ lag2.plot(soi, rec, 8, col="dodgerblue3") # Figure 3.11
 ```{r}
 library(zoo) # zoo allows easy use of the variable names
 dummy = ifelse(soi<0, 0, 1)
-fish = as.zoo(ts.intersect(rec, soiL6=lag(soi,-6), dL6=lag(dummy,-6)))
+fish = as.zoo(ts.intersect(rec, soiL6=stats::lag(soi,-6), dL6=stats::lag(dummy,-6)))
 summary(fit <- lm(rec~ soiL6*dL6, data=fish, na.action=NULL))
 ```
 
@@ -327,7 +330,7 @@ lines(fitted(fit), col=2, lwd=2)
 
 ```{r}
 w = c(.5, rep(1,11), .5)/12
-soif = filter(soi, sides=2, filter=w)
+soif = stats::filter(soi, sides=2, filter=w)
 tsplot(soi, col=rgb(.5, .6, .85, .9), ylim=c(-1, 1.15))
 lines(soif, lwd=2, col=4)
 # insert
@@ -348,6 +351,7 @@ SOI = ts(soi, freq=1)
 tsplot(SOI) # the time scale matters (not shown)
 lines(ksmooth(time(SOI), SOI, "normal", bandwidth=12), lwd=2, col=4)
 ```
+
 ```{r}
 tsplot(soi, col=rgb(0.5, 0.6, 0.85, .9))
 lines(lowess(soi, f=.05), lwd=2, col=4) # El Niño cycle
@@ -464,6 +468,8 @@ acf2(rec, 48) # will produce values and a graphic
 ```{r}
 regr$asy.se.coef # standard errors of the estimates
 ```
+
+
 ```{r}
 set.seed(2)
 ma1 = arima.sim(list(order = c(0,0,1), ma = 0.9), n = 50)
@@ -517,9 +523,13 @@ points(para[1:12], Sc[1:12], pch=16, col=4)
 ```{r}
 sarima(diff(log(varve)), p=0, d=0, q=1, no.constant=TRUE)
 ```
+
+
 ```{r}
 sarima(rec, p=2, d=0, q=0)
 ```
+
+
 ```{r}
 sarima.for(rec, n.ahead=24, p=2, d=0, q=0)
 abline(h=61.8585, col=4) # display estimated mean
@@ -714,7 +724,7 @@ sarima(cmort, 2,0,0, xreg=cbind(trend, temp, temp2, part) )
 ```{r}
 library(zoo)
 lag2.plot(Hare, Lynx, 5) # lead-lag relationship
-pp = as.zoo(ts.intersect(Lynx, HareL1 = lag(Hare,-1)))
+pp = as.zoo(ts.intersect(Lynx, HareL1 = stats::lag(Hare,-1)))
 
 summary(reg <- lm(pp$Lynx~ pp$HareL1)) # results not displayed
 acf2(resid(reg)) # in Figure 5.19

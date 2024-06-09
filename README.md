@@ -99,3 +99,22 @@ renv::restore()
 4. **Run the R code:**
 - Open the main R script or Rmd file in RStudio.
 - Execute the script by clicking the "Run" button or pressing `Ctrl + Enter`.
+
+
+### Directory Structure
+```
+.
+├── analysis                          ## Folder for analyzing data using Rmd, R scripts, etc
+│   └── vm_analysis.Rmd               ## Rmd file with examples of querying water quality data using USGS dataRetrieval package
+├── CODE_OF_CONDUCT.md
+├── data-raw                          ## Folder for storing raw (unmodified) data
+├── examples                          ## Folder for storing example code to help with time series and plotting functions in R
+│   └── ts_textbook_examples.Rmd      ## Rmd with examples from the time series textbook
+├── LICENSE
+├── README.md                         ## Installation instructions for repo
+├── renv                              ## generated renv folder for managing project packages and dependencies
+│   ├── activate.R
+│   └── settings.json
+├── renv.lock                         ## generated lockfile for project packages
+└── water-quality-time-series.Rproj
+```

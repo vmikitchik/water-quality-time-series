@@ -1,0 +1,88 @@
+
+
+```{r}
+########################################################
+# USGS Gage Data Exploration 
+# STAT 626 - Project
+# Author: Elena Lundeen
+
+# Download data from USGS gage stations 
+
+########################################################
+
+# Load packages -----------------------------------------------------------
+# install.packages("dataRetrieval")
+# install.packages("tidyverse")
+# install.packages("ggplot2")
+# install.packages("lubridate")
+
+library(dataRetrieval)
+library(tidyverse)
+library(ggplot2)
+library(lubridate)
+
+
+# Bois d'Arc Creek near Honey Grove, TX -----------------------------------
+
+##                  Gage No.;      Param. Codes;               Start & End date 
+rawBAC = readNWISdv("07332622", c("00060", "00010", "00300"), "2016-06-01", "2024-06-01") #Discharge
+
+BAC = addWaterYear(rawBAC) #Adds the correct water year column
+
+names(BAC)[7] = "Q_cfs"# Adds a name to our new column
+names(BAC)[5] = "waterT"
+names(BAC)[9] = "DO"
+
+rm(rawBAC)
+
+# Plots
+
+ggplot(BAC, aes(x = Date, y = Q_cfs)) +
+  geom_line() 
+
+ggplot(BAC, aes(x = Date, y = waterT)) +
+  geom_line() 
+
+ggplot(BAC, aes(x = Date, y = DO)) +
+  geom_line() 
+
+# Summary statistics
+summary(BAC$Q_cfs)
+sd(BAC$Q_cfs, na.rm = TRUE)
+
+
+
+# Lake Creek near Conroe, TX -----------------------------------
+# pulling from 2 gages - groundwater & surface water
+
+rawLC_gw = readNWISdv("301505095343702", "72019", "2016-06-01", "2024-06-01")
+rawLC_sw = readNWISdv("08067920", "00060", "2016-06-01", "2024-06-01")
+
+LC_gw = addWaterYear(rawLC_gw) #Adds the correct water year column
+LC_sw = addWaterYear(rawLC_sw) #Adds the correct water year column
+
+names(LC_gw)[5] = "DepthW"# Depth to water (feet below land)
+names(LC_sw)[5] = "Q_cfs"
+
+rm(rawLC_gw, rawLC_sw)
+
+
+# Plots
+
+ggplot(LC_gw, aes(x = Date, y = DepthW)) +
+  geom_line() 
+
+ggplot(LC_sw, aes(x = Date, y = Q_cfs)) +
+  geom_line() 
+
+# Summary statistics
+summary(LC_gw$DepthW)
+sd(LC_gw$DepthW, na.rm = TRUE)
+
+summary(LC_sw$Q_cfs)
+sd(LC_sw$Q_cfs, na.rm = TRUE)
+
+
+
+```
+

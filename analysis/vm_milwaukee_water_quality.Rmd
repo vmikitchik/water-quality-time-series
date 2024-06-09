@@ -36,7 +36,7 @@ filter_data <- df_summary |>
     rename(site = MonitoringLocationIdentifier) |> 
     mutate(Lat = as.numeric(MonitoringLocationLatitude),
            Lon = as.numeric(MonitoringLocationLongitude)) |> 
-    group_by(site, CharacteristicName) |> 
+    group_by(StateName, CharacteristicName) |> 
   #site, Lat, Lon, StateName
     summarise(min_year = min(YearSummarized),
               max_year = max(YearSummarized),
@@ -79,4 +79,5 @@ wi_data
 
 
 ```
+
 

@@ -10,7 +10,7 @@ selected examples from https://rconnect.usgs.gov/NMC_dataRetrieval_2/dataRetriev
 and https://rconnect.usgs.gov/NMC_dataRetrieval_1/dataRetrieval_1.html#/title-slide
 
 ```{r}
-# install.packages("dataRetrieval")
+install.packages("dataRetrieval")
 
 ```
 
@@ -157,6 +157,8 @@ wi_phos_summary <- wi_phos |>
 # leflet requires terra, which is difficult to install
 # follow instructions here: https://github.com/rspatial/terra
 # remotes::install_github("rspatial/terra")
+# install.packages("terra")
+# install.packages("leaflet")
 library(leaflet)
 
 leaf_map <- leaflet(data = wi_phos_summary, 

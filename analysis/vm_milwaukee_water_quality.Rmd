@@ -3,7 +3,10 @@ Water Quality Analysis for MKE
 
 
 ```{r}
-
+# library(remotes)
+# remotes::install_github("DOI-USGS/dataRetrieval",
+#                build_vignettes = TRUE)
+# install.packages("dataRetrieval")
 library(dataRetrieval)
 library(dplyr)
 
@@ -46,6 +49,6 @@ filter_data <- df_summary |>
 
 filter_data
 
-# CharacteristicName: "Phosphorus", "pH", "Temperature, water", 
+# CharacteristicName: "Phosphorus", "pH", "Temperature, water", "Total suspended solids", "Total dissolved solids"
 ```
 

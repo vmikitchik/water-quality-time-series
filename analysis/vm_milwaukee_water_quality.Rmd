@@ -1,0 +1,51 @@
+Water Quality Analysis for MKE
+
+
+
+```{r}
+
+library(dataRetrieval)
+library(dplyr)
+
+# get_data <- function(x){
+#   readWQPsummary(statecode = x,
+#                  sampleMedia = "Water",
+#                  characteristicName = "Phosphorus",
+#                  siteType = "Stream",
+#                  providers = "NWIS") |> 
+#     mutate(state = x)
+# }
+
+state_cd <- "WI"
+
+ df_summary <- readWQPsummary(
+   statecode = state_cd,
+   sampleMedia = "Water",
+   providers = "NWIS"
+   )
+
+# df_summary
+
+```
+
+```{r}
+filter_data <- df_summary |> 
+    rename(site = MonitoringLocationIdentifier) |> 
+    mutate(Lat = as.numeric(MonitoringLocationLatitude),
+           Lon = as.numeric(MonitoringLocationLongitude)) |> 
+    group_by(StateName, CharacteristicName) |> 
+    summarise(min_year = min(YearSummarized),
+              max_year = max(YearSummarized),
+              count = sum(ResultCount)) |> 
+    mutate(POR = max_year - min_year) |> 
+    filter(count > 200,
+           POR >= 15) |>
+    ungroup() |> 
+    filter(max_year >= 2016) |>
+    arrange(desc(count))
+
+filter_data
+
+# CharacteristicName: "Phosphorus", "pH", "Temperature, water", 
+```
+

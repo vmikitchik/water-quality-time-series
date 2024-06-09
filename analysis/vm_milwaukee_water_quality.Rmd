@@ -36,7 +36,8 @@ filter_data <- df_summary |>
     rename(site = MonitoringLocationIdentifier) |> 
     mutate(Lat = as.numeric(MonitoringLocationLatitude),
            Lon = as.numeric(MonitoringLocationLongitude)) |> 
-    group_by(StateName, CharacteristicName) |> 
+    group_by(site, CharacteristicName) |> 
+  #site, Lat, Lon, StateName
     summarise(min_year = min(YearSummarized),
               max_year = max(YearSummarized),
               count = sum(ResultCount)) |> 
@@ -50,5 +51,32 @@ filter_data <- df_summary |>
 filter_data
 
 # CharacteristicName: "Phosphorus", "pH", "Temperature, water", "Total suspended solids", "Total dissolved solids"
+```
+
+
+```{r}
+# find WI stations with a few of the desired characteristic names
+sites <- filter_data |>
+  filter(CharacteristicName=="Total suspended solids") |>
+  # select(site) |>
+  distinct()
+sites
+
+
+
+wi_data <-readWQPdata(
+  # siteid = sites$site,
+  siteid = "USGS-04084911",
+  CharacteristicName = "Total suspended solids",
+  # startDateLo = "1995-01-01",
+  # startDateHi = "2023-12-31",
+  sampleMedia = "Water",
+  convertType = FALSE,
+  ignore_attributes = TRUE
+  )
+wi_data
+
+
+
 ```
 

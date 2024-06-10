@@ -477,6 +477,7 @@ param_info
 
 ```{r}
 # create function to search different states and union data together
+library(leaflet)
 get_data <- function(x){
   readWQPsummary(statecode = x,
                  sampleMedia = "Water",
@@ -505,8 +506,7 @@ filter_data <- function(x){
 
 all_data <- data.frame()
 
-for(state in c("WI", "MI", "IL", "IN",
-               "MN", "OH", "NY", "PA")){
+for(state in c("TX")){
  
   wq_data <- get_data(state)
   filtered_data <- filter_data(wq_data)
@@ -519,7 +519,7 @@ for(state in c("WI", "MI", "IL", "IN",
 
 ```{r}
 leaf_map <- leaflet(data = all_data,
-                    width = 500, height = 500) |> 
+                    width = 1000, height = 500) |> 
     addProviderTiles("CartoDB.Positron") |> 
     addCircleMarkers(lng = ~Lon, 
         lat = ~Lat,

@@ -20,7 +20,9 @@ library(dataRetrieval)
 library(tidyverse)
 library(ggplot2)
 library(lubridate)
+```
 
+```{r}
 
 # Bois d'Arc Creek near Honey Grove, TX -----------------------------------
 
@@ -34,17 +36,25 @@ names(BAC)[5] = "waterT"
 names(BAC)[9] = "DO"
 
 rm(rawBAC)
+```
 
+```{r}
 # Plots
+culer = c(rgb(.12,.67,.85,.7), rgb(.67,.12,.85,.7))
 
-ggplot(BAC, aes(x = Date, y = Q_cfs)) +
-  geom_line() 
+ggplot(BAC, aes(x = Date, y = Q_cfs), color) +
+  geom_line()
 
 ggplot(BAC, aes(x = Date, y = waterT)) +
   geom_line() 
 
 ggplot(BAC, aes(x = Date, y = DO)) +
   geom_line() 
+
+```
+
+
+```{r}
 
 # Summary statistics
 summary(BAC$Q_cfs)
